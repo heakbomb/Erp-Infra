@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+  # 1. 데이터베이스 (공통 그릇)
+  db:
+    image: mysql:8.0
+    container_name: erp-db
+    restart: always
+    environment:
+      MYSQL_DATABASE: erp
+      MYSQL_ROOT_PASSWORD: root
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./mysql/init:/docker-entrypoint-initdb.d
+      - ./mysql/data:/var/lib/mysql
+
+  # 2. 백엔드 (Spring Boot - 담당자가 backend 폴더에 코드 넣을 예정)
+  backend:
+    build: ./backend
+    container_name: erp-backend
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/erp
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: root
+
+  # 3. AI 서버 (FastAPI - 담당자가 ai 폴더에 코드 넣을 예정)
+  ai:
+    build: ./ai
+    container_name: erp-ai
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+
+  # 4. 프론트엔드 (React - 담당자가 frontend 폴더에 코드 넣을 예정)
+  frontend:
+    build: ./frontend
+    container_name: erp-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - REACT_APP_API_URL=http://localhost:8080

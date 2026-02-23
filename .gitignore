@@ -1,0 +1,10 @@
+# 서비스 폴더
+frontend/
+backend/
+ai/
+
+# DB 데이터
+mysql/data/
+
+# 환경 변수 파일
+.env
