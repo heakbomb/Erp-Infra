@@ -1,7 +1,7 @@
 version: '3.8'
 
 services:
-  # 1. 데이터베이스 (공통 그릇)
+  # 1. 데이터베이스: 모든 백엔드와 배치 서버가 공유
   db:
     image: mysql:8.0
     container_name: erp-db
@@ -15,8 +15,8 @@ services:
       - ./mysql/init:/docker-entrypoint-initdb.d
       - ./mysql/data:/var/lib/mysql
 
-  # 2. 백엔드 (Spring Boot - 담당자가 backend 폴더에 코드 넣을 예정)
-  backend:
+  # 2. 메인 백엔드 (Spring Boot ERP)
+  erp-back:
     build: ./backend
     container_name: erp-backend
     ports:
@@ -28,7 +28,19 @@ services:
       SPRING_DATASOURCE_USERNAME: root
       SPRING_DATASOURCE_PASSWORD: root
 
-  # 3. AI 서버 (FastAPI - 담당자가 ai 폴더에 코드 넣을 예정)
+  # 3. 데이터 수집 서버 (Weather Batch - Spring Boot)
+  weather-batch:
+    build: ./batch
+    container_name: weather-batch
+    # 배치는 보통 포트 개방이 필요 없으나, 필요시 추가하세요.
+    depends_on:
+      - db
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/erp
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: root
+
+  # 4. AI 서버 (FastAPI)
   ai:
     build: ./ai
     container_name: erp-ai
@@ -37,7 +49,7 @@ services:
     depends_on:
       - db
 
-  # 4. 프론트엔드 (React - 담당자가 frontend 폴더에 코드 넣을 예정)
+  # 5. 프론트엔드 (React)
   frontend:
     build: ./frontend
     container_name: erp-frontend
