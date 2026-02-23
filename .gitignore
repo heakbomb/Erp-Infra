@@ -2,6 +2,7 @@
 frontend/
 backend/
 ai/
+batch/
 
 # DB 데이터
 mysql/data/
