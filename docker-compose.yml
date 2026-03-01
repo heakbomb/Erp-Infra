@@ -12,6 +12,10 @@ services:
     volumes:
       - ./mysql/init:/docker-entrypoint-initdb.d
       - ./mysql/data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 5s
+      retries: 10
 
   # 2. 메인 백엔드 (Spring Boot ERP)
   erp-back:
@@ -20,7 +24,8 @@ services:
     ports:
       - "8080:8080"
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     environment:
       SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/erp?useSSL=false&serverTimezone=Asia/Seoul&allowPublicKeyRetrieval=true
       SPRING_DATASOURCE_USERNAME: root
@@ -54,7 +59,8 @@ services:
       SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_KAKAO_USER_NAME_ATTRIBUTE: "id"
       APP_FRONTEND_BASE_URL: "http://localhost:3000"
       FILE_UPLOAD_DIR: "/tmp/uploads"
-      SPRING_JPA_HIBERNATE_DDL_AUTO: "create"
+      SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT: org.hibernate.dialect.MySQL8Dialect
+      SPRING_JPA_HIBERNATE_DDL_AUTO: create
 
   # 3. 데이터 수집 서버 (Weather Batch)
   weather-batch:
