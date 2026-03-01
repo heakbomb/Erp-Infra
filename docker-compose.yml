@@ -1,6 +1,5 @@
-
 services:
-  # 1. 데이터베이스: 모든 백엔드와 배치 서버가 공유
+  # 1. 데이터베이스
   db:
     image: mysql:8.0
     container_name: erp-db
@@ -9,7 +8,7 @@ services:
       MYSQL_DATABASE: erp
       MYSQL_ROOT_PASSWORD: root
     ports:
-      - "3306:3306"
+      - "3307:3306"
     volumes:
       - ./mysql/init:/docker-entrypoint-initdb.d
       - ./mysql/data:/var/lib/mysql
@@ -23,23 +22,63 @@ services:
     depends_on:
       - db
     environment:
-      SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/erp
+      SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/erp?useSSL=false&serverTimezone=Asia/Seoul&allowPublicKeyRetrieval=true
       SPRING_DATASOURCE_USERNAME: root
       SPRING_DATASOURCE_PASSWORD: root
+      APP_JWT_SECRET: "7f1a0e3c9b6e4d2a8f5c1b0e9a7d6c4f2a8e9b1c0d3f5a6b7c8d9e0f1a2b"
+      APP_JWT_ACCESS_TOKEN_TTL_MINUTES: 60
+      APP_JWT_REFRESH_TOKEN_TTL_DAYS: 14
+      APP_VERIFICATION_CODE_SECRET: "9c1c8d6d8c8c4e4a9a30f8b6f36a1b2c7c5f2d8a1e9b4c6d8f1a2b3c4d5e6f70"
+      NTS_BASE_URL: "https://api.odcloud.kr/api/nts-businessman/v1"
+      NTS_SERVICE_KEY: "d99c5dd8943c7085a202c351bab228904bcbab59779d52f2a81ca83e65874746"
+      IAMPORT_API_KEY: "store-d854c99d-0936-48b4-aaf0-f5a9fad2ba5b"
+      IAMPORT_API_SECRET: "eXCOe4WqBXi8irkubYx9h9jvoCN89HCcb2eK5OsnYWvIlx6wmGfdrnTD1kvpib5YhVcaJu6cPPWeKFYn"
+      APP_IMAP_HOST: "imap.gmail.com"
+      APP_IMAP_PORT: 993
+      APP_IMAP_USERNAME: "csmtask@gmail.com"
+      APP_IMAP_PASSWORD: "kpbuastnztbvscgk"
+      SPRING_MAIL_HOST: "smtp.gmail.com"
+      SPRING_MAIL_PORT: 587
+      SPRING_MAIL_USERNAME: "yohw601@gmail.com"
+      SPRING_MAIL_PASSWORD: "vrsbhtrrqxucasfq"
+      SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_KAKAO_CLIENT_ID: "1641975a0c1795b87050745fc720fef5"
+      SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_KAKAO_CLIENT_SECRET: "znD0KNxPRMlPaa8P4Y1kLCr6YKnZc74W"
+      SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_KAKAO_CLIENT_AUTHENTICATION_METHOD: "client_secret_post"
+      SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_KAKAO_AUTHORIZATION_GRANT_TYPE: "authorization_code"
+      SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_KAKAO_REDIRECT_URI: "{baseUrl}/login/oauth2/code/{registrationId}"
+      SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_KAKAO_SCOPE: "profile_nickname"
+      SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_KAKAO_CLIENT_NAME: "Kakao"
+      SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_KAKAO_AUTHORIZATION_URI: "https://kauth.kakao.com/oauth/authorize"
+      SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_KAKAO_TOKEN_URI: "https://kauth.kakao.com/oauth/token"
+      SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_KAKAO_USER_INFO_URI: "https://kapi.kakao.com/v2/user/me"
+      SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_KAKAO_USER_NAME_ATTRIBUTE: "id"
+      APP_FRONTEND_BASE_URL: "http://localhost:3000"
+      FILE_UPLOAD_DIR: "/tmp/uploads"
+      SPRING_JPA_HIBERNATE_DDL_AUTO: "create"
 
-  # 3. 데이터 수집 서버 (Weather Batch - Spring Boot)
+  # 3. 데이터 수집 서버 (Weather Batch)
   weather-batch:
     build: ./batch
     container_name: weather-batch
-    # 배치는 보통 포트 개방이 필요 없으나, 필요시 추가하세요.
     depends_on:
       - db
     environment:
-      SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/erp
+      SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/erp?useSSL=false&serverTimezone=Asia/Seoul&allowPublicKeyRetrieval=true
       SPRING_DATASOURCE_USERNAME: root
       SPRING_DATASOURCE_PASSWORD: root
+      KMA_AUTH_KEY: "l0PK45G0Ty-DyuORtA8vMQ"
+      KMA_BASE_URL: "https://apihub.kma.go.kr/api/typ01/url/kma_sfctm2.php"
+      KMA_STN: 108
+      KMA_HELP: 0
+      BACKFILL_ENABLED: "false"
+      BACKFILL_FROM: "2025-09-30T00:00"
+      BACKFILL_TO: "2025-12-31T09:00"
+      BACKFILL_STEP_MINUTES: 180
+      BACKFILL_SLEEP_MS: 300
+      WEATHER_CRON: "0 0 0/3 * * *"
+      SPRING_JPA_DATABASE_PLATFORM: org.hibernate.dialect.MySQL8Dialect
 
-  # 4. AI 서버 (FastAPI)
+  # 4. AI 서버
   ai:
     build: ./ai
     container_name: erp-ai
@@ -48,11 +87,18 @@ services:
     depends_on:
       - db
 
-  # 5. 프론트엔드 (React)
+  # 5. 프론트엔드 (React/Next.js)
   frontend:
     build: ./frontend
     container_name: erp-frontend
     ports:
-      - "3000:3000"
+      - "3000:80"
+    volumes:
+      - ./default.conf:/etc/nginx/conf.d/default.conf # Nginx 설정 주입 필수!
     environment:
-      - REACT_APP_API_URL=http://localhost:8080
+      # [핵심 수정] 
+      # Nginx가 /api/ 경로를 받아서 백엔드로 토스해주기로 했으므로,
+      # 프론트엔드 앱은 자기 자신의 /api 주소를 바라보게 합니다.
+      - NEXT_PUBLIC_API_URL=/api
+      - NEXT_PUBLIC_APP_URL=http://localhost:3000
+      - NEXT_PUBLIC_KAKAO_CLIENT_ID=1641975a0c1795b87050745fc720fef5
