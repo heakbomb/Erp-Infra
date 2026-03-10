@@ -3,6 +3,7 @@ frontend/
 backend/
 ai/
 batch/
+chatbot/
 
 # DB 데이터
 mysql/data/

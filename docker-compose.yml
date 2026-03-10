@@ -110,14 +110,19 @@ services:
       - NEXT_PUBLIC_APP_URL=http://localhost:3000
       - NEXT_PUBLIC_KAKAO_CLIENT_ID=1641975a0c1795b87050745fc720fef5
 
-  # 6. AI 챗봇 서버 (새로 추가)
+  # 6. AI 챗봇 서버
   chatbot:
     build: ./chatbot
     container_name: erp-chatbot
     ports:
-      - "8001:8000"  # 내 컴퓨터의 8001번 포트로 접속하면 챗봇의 8000번으로 연결
+      - "8001:8000"
     depends_on:
       - db
-    # 필요하다면 환경변수 추가
-    # environment:
-    #   - OPENAI_API_KEY=sk-...
+    environment:
+      # 도커 내부에서 내 컴퓨터(Host)에 띄워진 ES와 Ollama에 접속하기 위한 특수 주소(host.docker.internal)
+      - ES_URL=http://host.docker.internal:9200
+      - OLLAMA_API_URL=http://host.docker.internal:11434/api/generate
+      - EMBED_MODEL_NAME=jhgan/ko-sroberta-multitask
+      - OLLAMA_MODEL=anpigon/eeve-korean-10.8b
+    extra_hosts:
+      - "host.docker.internal:host-gateway" # 리눅스/우분투 환경에서 호스트 접근을 허용하는 핵심 설정
