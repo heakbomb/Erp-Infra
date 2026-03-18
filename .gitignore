@@ -8,5 +8,7 @@ chatbot/
 # DB 데이터
 mysql/data/
 
-# 환경 변수 파일
+# 환경 변수 파일 (.env.example 은 커밋 가능)
 .env
+.env.local
+.env.production

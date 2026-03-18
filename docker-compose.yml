@@ -5,8 +5,8 @@ services:
     container_name: erp-db
     restart: always
     environment:
-      MYSQL_DATABASE: erp
-      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
     ports:
       - "3307:3306"
     volumes:
@@ -27,30 +27,30 @@ services:
       db:
         condition: service_healthy
     environment:
-      SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/erp?useSSL=false&serverTimezone=Asia/Seoul&allowPublicKeyRetrieval=true
-      SPRING_DATASOURCE_USERNAME: root
-      SPRING_DATASOURCE_PASSWORD: root
-      APP_JWT_SECRET: "7f1a0e3c9b6e4d2a8f5c1b0e9a7d6c4f2a8e9b1c0d3f5a6b7c8d9e0f1a2b"
-      APP_JWT_ACCESS_TOKEN_TTL_MINUTES: 60
-      APP_JWT_REFRESH_TOKEN_TTL_DAYS: 14
-      APP_VERIFICATION_CODE_SECRET: "9c1c8d6d8c8c4e4a9a30f8b6f36a1b2c7c5f2d8a1e9b4c6d8f1a2b3c4d5e6f70"
-      NTS_BASE_URL: "https://api.odcloud.kr/api/nts-businessman/v1"
-      NTS_SERVICE_KEY: "d99c5dd8943c7085a202c351bab228904bcbab59779d52f2a81ca83e65874746"
-      IAMPORT_API_KEY: "store-d854c99d-0936-48b4-aaf0-f5a9fad2ba5b"
-      IAMPORT_API_SECRET: "eXCOe4WqBXi8irkubYx9h9jvoCN89HCcb2eK5OsnYWvIlx6wmGfdrnTD1kvpib5YhVcaJu6cPPWeKFYn"
-      APP_IMAP_HOST: "imap.gmail.com"
-      APP_IMAP_PORT: 993
-      APP_IMAP_USERNAME: "csmtask@gmail.com"
-      APP_IMAP_PASSWORD: "kpbuastnztbvscgk"
-      SPRING_MAIL_HOST: "smtp.gmail.com"
-      SPRING_MAIL_PORT: 587
-      SPRING_MAIL_USERNAME: "yohw601@gmail.com"
-      SPRING_MAIL_PASSWORD: "vrsbhtrrqxucasfq"
+      SPRING_DATASOURCE_URL: ${DB_URL}
+      SPRING_DATASOURCE_USERNAME: ${DB_USERNAME}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
+      APP_JWT_SECRET: ${APP_JWT_SECRET}
+      APP_JWT_ACCESS_TOKEN_TTL_MINUTES: ${APP_JWT_ACCESS_TOKEN_TTL_MINUTES}
+      APP_JWT_REFRESH_TOKEN_TTL_DAYS: ${APP_JWT_REFRESH_TOKEN_TTL_DAYS}
+      APP_VERIFICATION_CODE_SECRET: ${APP_VERIFICATION_CODE_SECRET}
+      NTS_BASE_URL: ${NTS_BASE_URL}
+      NTS_SERVICE_KEY: ${NTS_SERVICE_KEY}
+      IAMPORT_API_KEY: ${IAMPORT_API_KEY}
+      IAMPORT_API_SECRET: ${IAMPORT_API_SECRET}
+      APP_IMAP_HOST: ${APP_IMAP_HOST}
+      APP_IMAP_PORT: ${APP_IMAP_PORT}
+      APP_IMAP_USERNAME: ${APP_IMAP_USERNAME}
+      APP_IMAP_PASSWORD: ${APP_IMAP_PASSWORD}
+      SPRING_MAIL_HOST: ${SPRING_MAIL_HOST}
+      SPRING_MAIL_PORT: ${SPRING_MAIL_PORT}
+      SPRING_MAIL_USERNAME: ${SPRING_MAIL_USERNAME}
+      SPRING_MAIL_PASSWORD: ${SPRING_MAIL_PASSWORD}
       SPRING_MAIL_PROPERTIES_MAIL_SMTP_AUTH: "true"
       SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE: "true"
       SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_REQUIRED: "true"
-      SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_KAKAO_CLIENT_ID: "1641975a0c1795b87050745fc720fef5"
-      SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_KAKAO_CLIENT_SECRET: "znD0KNxPRMlPaa8P4Y1kLCr6YKnZc74W"
+      SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_KAKAO_CLIENT_ID: ${KAKAO_CLIENT_ID}
+      SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_KAKAO_CLIENT_SECRET: ${KAKAO_CLIENT_SECRET}
       SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_KAKAO_CLIENT_AUTHENTICATION_METHOD: "client_secret_post"
       SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_KAKAO_AUTHORIZATION_GRANT_TYPE: "authorization_code"
       SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_KAKAO_REDIRECT_URI: "{baseUrl}/login/oauth2/code/{registrationId}"
@@ -60,10 +60,10 @@ services:
       SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_KAKAO_TOKEN_URI: "https://kauth.kakao.com/oauth/token"
       SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_KAKAO_USER_INFO_URI: "https://kapi.kakao.com/v2/user/me"
       SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_KAKAO_USER_NAME_ATTRIBUTE: "id"
-      APP_FRONTEND_BASE_URL: "http://localhost:3000"
-      FILE_UPLOAD_DIR: "/tmp/uploads"
+      APP_FRONTEND_BASE_URL: ${APP_FRONTEND_BASE_URL}
+      FILE_UPLOAD_DIR: ${FILE_UPLOAD_DIR}
       SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT: org.hibernate.dialect.MySQL8Dialect
-      SPRING_JPA_HIBERNATE_DDL_AUTO: create
+      SPRING_JPA_HIBERNATE_DDL_AUTO: ${SPRING_JPA_HIBERNATE_DDL_AUTO}
 
   # 3. 데이터 수집 서버 (Weather Batch)
   weather-batch:
@@ -72,19 +72,19 @@ services:
     depends_on:
       - db
     environment:
-      SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/erp?useSSL=false&serverTimezone=Asia/Seoul&allowPublicKeyRetrieval=true
-      SPRING_DATASOURCE_USERNAME: root
-      SPRING_DATASOURCE_PASSWORD: root
-      KMA_AUTH_KEY: "l0PK45G0Ty-DyuORtA8vMQ"
-      KMA_BASE_URL: "https://apihub.kma.go.kr/api/typ01/url/kma_sfctm2.php"
-      KMA_STN: 108
-      KMA_HELP: 0
-      BACKFILL_ENABLED: "false"
-      BACKFILL_FROM: "2025-09-30T00:00"
-      BACKFILL_TO: "2025-12-31T09:00"
-      BACKFILL_STEP_MINUTES: 180
-      BACKFILL_SLEEP_MS: 300
-      WEATHER_CRON: "0 0 0/3 * * *"
+      SPRING_DATASOURCE_URL: ${DB_URL}
+      SPRING_DATASOURCE_USERNAME: ${DB_USERNAME}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
+      KMA_AUTH_KEY: ${KMA_AUTH_KEY}
+      KMA_BASE_URL: ${KMA_BASE_URL}
+      KMA_STN: ${KMA_STN}
+      KMA_HELP: ${KMA_HELP}
+      BACKFILL_ENABLED: ${BACKFILL_ENABLED}
+      BACKFILL_FROM: ${BACKFILL_FROM}
+      BACKFILL_TO: ${BACKFILL_TO}
+      BACKFILL_STEP_MINUTES: ${BACKFILL_STEP_MINUTES}
+      BACKFILL_SLEEP_MS: ${BACKFILL_SLEEP_MS}
+      WEATHER_CRON: ${WEATHER_CRON}
       SPRING_JPA_DATABASE_PLATFORM: org.hibernate.dialect.MySQL8Dialect
 
   # 4. AI 서버
@@ -105,10 +105,9 @@ services:
     depends_on:
       - erp-backend
     environment:
-      # 브라우저가 자기 자신(localhost:3000)의 /api 경로를 찌르도록 설정
-      - NEXT_PUBLIC_API_URL=/api
-      - NEXT_PUBLIC_APP_URL=http://localhost:3000
-      - NEXT_PUBLIC_KAKAO_CLIENT_ID=1641975a0c1795b87050745fc720fef5
+      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
+      - NEXT_PUBLIC_APP_URL=${NEXT_PUBLIC_APP_URL}
+      - NEXT_PUBLIC_KAKAO_CLIENT_ID=${NEXT_PUBLIC_KAKAO_CLIENT_ID}
 
   # 6. AI 챗봇 서버
   chatbot:
@@ -119,10 +118,9 @@ services:
     depends_on:
       - db
     environment:
-      # 도커 내부에서 내 컴퓨터(Host)에 띄워진 ES와 Ollama에 접속하기 위한 특수 주소(host.docker.internal)
-      - ES_URL=http://host.docker.internal:9200
-      - OLLAMA_API_URL=http://host.docker.internal:11434/api/generate
-      - EMBED_MODEL_NAME=jhgan/ko-sroberta-multitask
-      - OLLAMA_MODEL=anpigon/eeve-korean-10.8b
+      - ES_URL=${ES_URL}
+      - OLLAMA_API_URL=${OLLAMA_API_URL}
+      - EMBED_MODEL_NAME=${EMBED_MODEL_NAME}
+      - OLLAMA_MODEL=${OLLAMA_MODEL}
     extra_hosts:
-      - "host.docker.internal:host-gateway" # 리눅스/우분투 환경에서 호스트 접근을 허용하는 핵심 설정
+      - "host.docker.internal:host-gateway"
