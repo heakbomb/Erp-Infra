@@ -1,0 +1,60 @@
+name: Deploy to AWS
+
+on:
+  push:
+    branches:
+      - main
+
+env:
+  AWS_REGION: ap-northeast-2
+  ECR_REGISTRY: 262517453150.dkr.ecr.ap-northeast-2.amazonaws.com
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 코드 체크아웃
+        uses: actions/checkout@v4
+
+      - name: AWS 자격증명 설정
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: ECR 로그인
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: 변경된 서비스 감지 & 빌드 & 푸시
+        run: |
+          services=("backend" "frontend" "ai" "batch")
+          ecr_names=("erp-backend" "erp-frontend" "erp-ai" "erp-batch")
+
+          for i in "${!services[@]}"; do
+            svc="${services[$i]}"
+            ecr="${ecr_names[$i]}"
+
+            if git diff --name-only HEAD~1 HEAD | grep -q "^${svc}/"; then
+              echo "변경 감지: ${svc} → 빌드 시작"
+              docker build -t $ECR_REGISTRY/${ecr}:latest ./${svc}
+              docker push $ECR_REGISTRY/${ecr}:latest
+            else
+              echo "변경 없음: ${svc} → 스킵"
+            fi
+          done
+
+      - name: EC2 배포
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ec2-user
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            cd ~/Erp-Infra
+            git pull origin main
+            aws ecr get-login-password --region ap-northeast-2 | docker login --username AWS --password-stdin 262517453150.dkr.ecr.ap-northeast-2.amazonaws.com
+            docker-compose pull
+            docker-compose up -d
+            docker image prune -f
