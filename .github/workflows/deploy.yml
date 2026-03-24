@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: 코드 체크아웃
+      - name: 인프라 레포 체크아웃
         uses: actions/checkout@v4
 
       - name: AWS 자격증명 설정
@@ -27,24 +27,76 @@ jobs:
       - name: ECR 로그인
         uses: aws-actions/amazon-ecr-login@v2
 
-      - name: 변경된 서비스 감지 & 빌드 & 푸시
+      - name: Secrets Manager에서 프론트엔드 환경변수 가져오기
         run: |
-          services=("backend" "frontend" "ai" "batch")
-          ecr_names=("erp-backend" "erp-frontend" "erp-ai" "erp-batch")
+          SECRET=$(aws secretsmanager get-secret-value \
+            --secret-id erp/prod \
+            --region ap-northeast-2 \
+            --query SecretString \
+            --output text)
 
-          for i in "${!services[@]}"; do
-            svc="${services[$i]}"
-            ecr="${ecr_names[$i]}"
+          echo "NEXT_PUBLIC_APP_URL=$(echo $SECRET | python3 -c "import sys,json; print(json.load(sys.stdin).get('NEXT_PUBLIC_APP_URL',''))")" >> $GITHUB_ENV
+          echo "NEXT_PUBLIC_KAKAO_CLIENT_ID=$(echo $SECRET | python3 -c "import sys,json; print(json.load(sys.stdin).get('NEXT_PUBLIC_KAKAO_CLIENT_ID',''))")" >> $GITHUB_ENV
+          echo "NEXT_PUBLIC_NAVER_MAP_CLIENT_ID=$(echo $SECRET | python3 -c "import sys,json; print(json.load(sys.stdin).get('NEXT_PUBLIC_NAVER_MAP_CLIENT_ID',''))")" >> $GITHUB_ENV
+          echo "NEXT_PUBLIC_PORTONE_STORE_ID=$(echo $SECRET | python3 -c "import sys,json; print(json.load(sys.stdin).get('NEXT_PUBLIC_PORTONE_STORE_ID',''))")" >> $GITHUB_ENV
+          echo "NEXT_PUBLIC_PORTONE_CHANNEL_KEY=$(echo $SECRET | python3 -c "import sys,json; print(json.load(sys.stdin).get('NEXT_PUBLIC_PORTONE_CHANNEL_KEY',''))")" >> $GITHUB_ENV
 
-            if git diff --name-only HEAD~1 HEAD | grep -q "^${svc}/"; then
-              echo "변경 감지: ${svc} → 빌드 시작"
-              docker build -t $ECR_REGISTRY/${ecr}:latest ./${svc}
-              docker push $ECR_REGISTRY/${ecr}:latest
-            else
-              echo "변경 없음: ${svc} → 스킵"
-            fi
-          done
+      # 백엔드
+      - name: 백엔드 레포 체크아웃
+        uses: actions/checkout@v4
+        with:
+          repository: heakbomb/Erp-Back
+          path: backend
 
+      - name: 백엔드 빌드 & 푸시
+        run: |
+          docker build -t $ECR_REGISTRY/erp-backend:latest ./backend
+          docker push $ECR_REGISTRY/erp-backend:latest
+
+      # 프론트엔드
+      - name: 프론트엔드 레포 체크아웃
+        uses: actions/checkout@v4
+        with:
+          repository: heakbomb/Erp-Front
+          path: frontend
+
+      - name: 프론트엔드 빌드 & 푸시
+        run: |
+          docker build \
+            --build-arg NEXT_PUBLIC_API_URL=/api \
+            --build-arg NEXT_PUBLIC_APP_URL=${{ env.NEXT_PUBLIC_APP_URL }} \
+            --build-arg NEXT_PUBLIC_KAKAO_CLIENT_ID=${{ env.NEXT_PUBLIC_KAKAO_CLIENT_ID }} \
+            --build-arg NEXT_PUBLIC_NAVER_MAP_CLIENT_ID=${{ env.NEXT_PUBLIC_NAVER_MAP_CLIENT_ID }} \
+            --build-arg NEXT_PUBLIC_PORTONE_STORE_ID=${{ env.NEXT_PUBLIC_PORTONE_STORE_ID }} \
+            --build-arg NEXT_PUBLIC_PORTONE_CHANNEL_KEY=${{ env.NEXT_PUBLIC_PORTONE_CHANNEL_KEY }} \
+            -t $ECR_REGISTRY/erp-frontend:latest ./frontend
+          docker push $ECR_REGISTRY/erp-frontend:latest
+
+      # AI 서버
+      - name: AI 레포 체크아웃
+        uses: actions/checkout@v4
+        with:
+          repository: heakbomb/Erp-AI
+          path: ai
+
+      - name: AI 빌드 & 푸시
+        run: |
+          docker build -t $ECR_REGISTRY/erp-ai:latest ./ai
+          docker push $ECR_REGISTRY/erp-ai:latest
+
+      # Weather Batch
+      - name: Weather Batch 레포 체크아웃
+        uses: actions/checkout@v4
+        with:
+          repository: heakbomb/Erp-Weather-Batch
+          path: batch
+
+      - name: Weather Batch 빌드 & 푸시
+        run: |
+          docker build -t $ECR_REGISTRY/erp-batch:latest ./batch
+          docker push $ECR_REGISTRY/erp-batch:latest
+
+      # EC2 배포
       - name: EC2 배포
         uses: appleboy/ssh-action@v1
         with:
