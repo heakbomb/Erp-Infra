@@ -19,7 +19,7 @@ services:
 
   # 2. 메인 백엔드 (Spring Boot ERP)
   erp-backend:
-    build: ./backend
+    image: 262517453150.dkr.ecr.ap-northeast-2.amazonaws.com/erp-backend:latest
     container_name: erp-backend
     ports:
       - "8080:8080"
@@ -67,7 +67,7 @@ services:
 
   # 3. 데이터 수집 서버 (Weather Batch)
   weather-batch:
-    build: ./batch
+    image: 262517453150.dkr.ecr.ap-northeast-2.amazonaws.com/erp-batch:latest
     container_name: weather-batch
     depends_on:
       - db
@@ -89,7 +89,7 @@ services:
 
   # 4. AI 서버
   ai:
-    build: ./ai
+    image: 262517453150.dkr.ecr.ap-northeast-2.amazonaws.com/erp-ai:latest
     container_name: erp-ai
     ports:
       - "8000:8000"
@@ -98,7 +98,7 @@ services:
 
   # 5. 프론트엔드 (React/Next.js)
   frontend:
-    build: ./frontend
+    image: 262517453150.dkr.ecr.ap-northeast-2.amazonaws.com/erp-frontend:latest
     container_name: erp-frontend
     ports:
       - "80:80"
@@ -111,7 +111,7 @@ services:
 
   # 6. AI 챗봇 서버
   chatbot:
-    build: ./chatbot
+    image: 262517453150.dkr.ecr.ap-northeast-2.amazonaws.com/erp-chatbot:latest
     container_name: erp-chatbot
     ports:
       - "8001:8000"
