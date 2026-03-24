@@ -109,18 +109,18 @@ services:
       - NEXT_PUBLIC_APP_URL=${NEXT_PUBLIC_APP_URL}
       - NEXT_PUBLIC_KAKAO_CLIENT_ID=${NEXT_PUBLIC_KAKAO_CLIENT_ID}
 
-  # 6. AI 챗봇 서버
-  chatbot:
-    image: 262517453150.dkr.ecr.ap-northeast-2.amazonaws.com/erp-chatbot:latest
-    container_name: erp-chatbot
-    ports:
-      - "8001:8000"
-    depends_on:
-      - db
-    environment:
-      - ES_URL=${ES_URL}
-      - OLLAMA_API_URL=${OLLAMA_API_URL}
-      - EMBED_MODEL_NAME=${EMBED_MODEL_NAME}
-      - OLLAMA_MODEL=${OLLAMA_MODEL}
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
+  # 6. AI 챗봇 서버 (Ollama 의존 - EC2 배포 제외)
+  # chatbot:
+  #   image: 262517453150.dkr.ecr.ap-northeast-2.amazonaws.com/erp-chatbot:latest
+  #   container_name: erp-chatbot
+  #   ports:
+  #     - "8001:8000"
+  #   depends_on:
+  #     - db
+  #   environment:
+  #     - ES_URL=${ES_URL}
+  #     - OLLAMA_API_URL=${OLLAMA_API_URL}
+  #     - EMBED_MODEL_NAME=${EMBED_MODEL_NAME}
+  #     - OLLAMA_MODEL=${OLLAMA_MODEL}
+  #   extra_hosts:
+  #     - "host.docker.internal:host-gateway"
