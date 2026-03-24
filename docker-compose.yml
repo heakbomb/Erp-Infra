@@ -70,7 +70,8 @@ services:
     image: 262517453150.dkr.ecr.ap-northeast-2.amazonaws.com/erp-batch:latest
     container_name: weather-batch
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     environment:
       SPRING_DATASOURCE_URL: ${DB_URL}
       SPRING_DATASOURCE_USERNAME: ${DB_USERNAME}
