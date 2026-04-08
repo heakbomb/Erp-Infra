@@ -12,3 +12,5 @@ mysql/data/
 .env
 .env.local
 .env.production
+
+/docs
