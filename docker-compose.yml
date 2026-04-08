@@ -1,31 +1,10 @@
 services:
-  # 1. 데이터베이스
-  db:
-    image: mysql:8.0
-    container_name: erp-db
-    restart: always
-    environment:
-      MYSQL_DATABASE: ${MYSQL_DATABASE}
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
-    ports:
-      - "3307:3306"
-    volumes:
-      - ./mysql/init:/docker-entrypoint-initdb.d
-      - ./mysql/data:/var/lib/mysql
-    healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
-      timeout: 5s
-      retries: 10
-
   # 2. 메인 백엔드 (Spring Boot ERP)
   erp-backend:
     image: 262517453150.dkr.ecr.ap-northeast-2.amazonaws.com/erp-backend:latest
     container_name: erp-backend
     ports:
       - "8080:8080"
-    depends_on:
-      db:
-        condition: service_healthy
     environment:
       SPRING_DATASOURCE_URL: ${DB_URL}
       SPRING_DATASOURCE_USERNAME: ${DB_USERNAME}
@@ -69,9 +48,6 @@ services:
   weather-batch:
     image: 262517453150.dkr.ecr.ap-northeast-2.amazonaws.com/erp-batch:latest
     container_name: weather-batch
-    depends_on:
-      db:
-        condition: service_healthy
     environment:
       SPRING_DATASOURCE_URL: ${DB_URL}
       SPRING_DATASOURCE_USERNAME: ${DB_USERNAME}
@@ -94,8 +70,6 @@ services:
     container_name: erp-ai
     ports:
       - "8000:8000"
-    depends_on:
-      - db
 
   # 5. 프론트엔드 (React/Next.js)
   frontend:
